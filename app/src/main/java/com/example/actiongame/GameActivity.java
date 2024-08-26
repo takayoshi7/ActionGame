@@ -33,6 +33,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     private float rectx;
     private float recty = -70f;
     private float kyarax;
+    private float kyaray;
     // 障害物のサイズ
     private float rectwidth;
     private float rectheight;
@@ -43,8 +44,11 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // ゲームエリアのサイズ
     private float screenx;
     private float screeny;
-
+    // スコアカウント用
+    private int score = 0;
+    // 処理停止判定　true:停止　false:続行
     private volatile boolean clickphase = false;
+    // Handlerクラスのインスタンス化
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -76,7 +80,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             // キャラクターの初期配置
             kyarax = (screenx / 2) - (kyarawidth / 2);
             kyara1.setX(kyarax);
-            kyara1.setY(screeny - kyaraheight);
+            kyaray = screeny - kyaraheight;
+            kyara1.setY(kyaray);
         });
 
         ViewTreeObserver obser2 = rect.getViewTreeObserver();
@@ -97,14 +102,18 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 //            scoretext.setText("rect:" + rectwidth + " screen:" + screenx);
         });
 
+        // 初期スコア表示
+        scoretext.setText("score:" + score);
+
         clickphase = false;
         Thread thread = new Thread(this);
+        // 実行
         thread.start();
     }
 
     @Override
     public void run() {
-        int period = 100; // 1000ミリ秒 = 1秒
+        int period = 10; // 1000ミリ秒 = 1秒
         while(!clickphase) {
             try {
                 Thread.sleep(period);
@@ -116,7 +125,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void run() {
                     //実行したい機能
-                    recty += 30f; // 時間periodで動く距離
+                    recty += 3f; // 時間periodで動く距離
                     if(recty > screeny) {
                         recty = -100f;
 
@@ -124,7 +133,19 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         Random random = new Random();
                         int x = random.nextInt(rectmoverange);
                         rectx = x;
+                        score++;
+                        scoretext.setText("score:" + score);
                     }
+
+                    // 衝突判定
+                    if((recty + rectheight) >= kyaray && recty <= (kyaray + kyaraheight) &&
+                            (rectx + rectwidth) > kyarax && rectx < (kyarax + kyarawidth)) {
+                        // 処理停止
+                        clickphase = true;
+                        // ゲームオーバー表示
+                        scoretext.setText("GAME OVER");
+                    }
+
                     // 配置場所をセット
                     rect.setX(rectx);
                     rect.setY(recty);
