@@ -22,10 +22,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         maintext = findViewById(R.id.maintext);
 
+        // ボタンをIDで取得
         mainstartbtn = findViewById(R.id.mainstartbtn);
         mainstartbtn.setOnClickListener(this);
     }
 
+    // GameActivity画面を表示
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.mainstartbtn) {
