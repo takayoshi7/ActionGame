@@ -6,9 +6,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Display;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,14 +22,25 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // キャラクターと障害物の画像
     private ImageView kyara1;
     private ImageView rect;
+    // スコア表示部
+    private TextView scoretext;
     // キャラクターを左右に動かすボタン
     private Button leftbtn;
     private Button rightbtn;
+    // ゲームエリアのレイアウト
+    private FrameLayout frame;
     // キャラクターと障害物の初期位置
-    private float rectx = 50f;
+    private float rectx;
     private float recty = -70f;
-    private  float kyarax = 500f;
-    // 画面の座標
+    private float kyarax;
+    // 障害物のサイズ
+    private float rectwidth;
+    private float rectheight;
+    private int rectmoverange;
+    // キャラクターのサイズ
+    private float kyarawidth;
+    private float kyaraheight;
+    // ゲームエリアのサイズ
     private float screenx;
     private float screeny;
 
@@ -40,26 +55,47 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         // 画像をIDで取得
         kyara1 = findViewById(R.id.kyara1);
         rect = findViewById(R.id.rect);
+        // スコアテキストエリアをIDで取得
+        scoretext = findViewById(R.id.scoretext);
+        // ゲームエリアをIDで取得
+        frame = findViewById(R.id.frame);
         // ボタンをIDで取得
         leftbtn = findViewById(R.id.leftbtn);
         leftbtn.setOnClickListener(this);
         rightbtn = findViewById(R.id.rightbtn);
         rightbtn.setOnClickListener(this);
 
-        // 画面のサイズを取得
-        WindowManager win = getWindowManager();
-        Display dis = win.getDefaultDisplay();
-        Point poi = new Point();
-        dis.getSize(poi);
+        ViewTreeObserver obser = kyara1.getViewTreeObserver();
+        obser.addOnGlobalLayoutListener(() -> {
+            // キャラクターのサイズ取得
+            kyarawidth = kyara1.getWidth();
+            kyaraheight = kyara1.getHeight();
+            // ゲームエリアのサイズ取得
+            screenx = frame.getWidth();
+            screeny = frame.getHeight();
+            // キャラクターの初期配置
+            kyarax = (screenx / 2) - (kyarawidth / 2);
+            kyara1.setX(kyarax);
+            kyara1.setY(screeny - kyaraheight);
+        });
 
-        screenx = poi.x;
-        screeny = poi.y;
+        ViewTreeObserver obser2 = rect.getViewTreeObserver();
+        obser2.addOnGlobalLayoutListener(() -> {
+            // 障害物のサイズ取得
+            rectwidth = rect.getWidth();
+            rectheight = rect.getHeight();
+            // ゲームエリアのサイズ取得
+            screenx = frame.getWidth();
+            screeny = frame.getHeight();
+            // 障害物の初期配置（ランダム）
+            rectmoverange = (int)screenx + 1 - (int)rectwidth;
+            int firstX = new Random().nextInt(rectmoverange) ;
+            rectx = (float)firstX;
+            rect.setX(rectx);
+            rect.setY(recty);
 
-        // 2つの画像の初期値を設定
-        rect.setX(rectx);
-        rect.setY(recty);
-        kyara1.setX(kyarax);
-        kyara1.setY(800f);
+//            scoretext.setText("rect:" + rectwidth + " screen:" + screenx);
+        });
 
         clickphase = false;
         Thread thread = new Thread(this);
@@ -86,7 +122,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
                         // 障害物の横位置をランダムにする
                         Random random = new Random();
-                        int x = random.nextInt((int)screenx) + 1;
+                        int x = random.nextInt(rectmoverange);
                         rectx = x;
                     }
                     // 配置場所をセット
@@ -101,10 +137,18 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.leftbtn) {
-            kyarax -= 20f;
+            if(kyarax <= 50f) {
+                kyarax = 0f;
+            } else {
+                kyarax -= 50f;
+            }
             kyara1.setX(kyarax);
         } else if (view.getId() == R.id.rightbtn) {
-            kyarax += 20f;
+            if(kyarax >= (screenx - kyarawidth - 50f)) {
+                kyarax = (screenx - kyarawidth);
+            } else {
+                kyarax += 50f;
+            }
             kyara1.setX(kyarax);
         }
     }

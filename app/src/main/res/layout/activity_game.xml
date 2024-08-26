@@ -7,43 +7,63 @@
     tools:context=".GameActivity"
     android:orientation="vertical">
 
-    <FrameLayout
+    <TextView
+        android:id="@+id/scoretext"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
-
-        <ImageView
-            android:id="@+id/rect"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            app:srcCompat="@drawable/chap4_1_1" />
-
-        <ImageView
-            android:id="@+id/kyara1"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            app:srcCompat="@drawable/chap4_1_2" />
-    </FrameLayout>
+        android:layout_height="40dp"
+        android:textSize="25dp"
+        android:text="Score:0" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="bottom"
-        android:layout_weight="10"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/leftbtn"
-            android:layout_width="wrap_content"
+        <FrameLayout
+            android:id="@+id/frame"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="←" />
+            android:layout_weight="1">
 
-        <Button
-            android:id="@+id/rightbtn"
-            android:layout_width="wrap_content"
+            <ImageView
+                android:id="@+id/rect"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                app:srcCompat="@drawable/chap4_1_1"
+                tools:srcCompat="@drawable/chap4_1_2" />
+
+            <ImageView
+                android:id="@+id/kyara1"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:srcCompat="@drawable/chap4_1_2"
+                tools:srcCompat="@drawable/chap4_1_1" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="→" />
+            android:layout_gravity="bottom"
+            android:layout_weight="10"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/leftbtn"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="←" />
+
+            <Button
+                android:id="@+id/rightbtn"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="→" />
+        </LinearLayout>
+
+
     </LinearLayout>
+
+
 </LinearLayout>
