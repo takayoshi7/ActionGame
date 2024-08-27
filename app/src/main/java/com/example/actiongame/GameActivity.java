@@ -15,7 +15,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Random;
 
@@ -49,20 +53,29 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // ゲームエリアのサイズ
     private float screenx;
     private float screeny;
+    // キャラクターのスピード
+    private float kyaraspeed = 10f;
+    private float kyaraspeedlong = 1f;
     // スコアカウント用
     private int score = 0;
     // 処理停止判定　true:停止　false:続行
     private volatile boolean clickphase = false;
     // Handlerクラスのインスタンス化
     private final Handler handler = new Handler(Looper.getMainLooper());
-
+    // ボタンが長押しされたか判定用
     private boolean leftphase = false;
     private boolean rightphase =false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_game);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.game), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         // 画像をIDで取得
         kyara1 = findViewById(R.id.kyara1);
@@ -116,8 +129,6 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             rectx = (float)firstX;
             rect.setX(rectx);
             rect.setY(recty);
-
-//            scoretext.setText("rect:" + rectwidth + " screen:" + screenx);
         });
 
         // 初期スコア表示
@@ -152,20 +163,20 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
                     // 左ボタン長押し時の動作
                     if (leftphase == true) {
-                        if (kyarax <= 5f) {
+                        if (kyarax <= kyaraspeedlong) {
                             kyarax = 0f;
                         } else {
-                            kyarax -= 5f;
+                            kyarax -= kyaraspeedlong;
                         }
                         kyara1.setX(kyarax);
                     }
 
                     // 右ボタン長押し時の動作
                     if (rightphase == true) {
-                        if (kyarax >= (screenx - kyarawidth - 5f)) {
+                        if (kyarax >= (screenx - kyarawidth - kyaraspeedlong)) {
                             kyarax = (screenx - kyarawidth);
                         } else {
-                            kyarax += 5f;
+                            kyarax += kyaraspeedlong;
                         }
                         kyara1.setX(kyarax);
                     }
@@ -223,18 +234,18 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             thread.start();
         } else if (view.getId() == R.id.leftbtn) {
             // 左ボタンを押したらキャラクターが移動する
-            if (kyarax <= 10f) {
+            if (kyarax <= kyaraspeed) {
                 kyarax = 0f;
             } else {
-                kyarax -= 10f;
+                kyarax -= kyaraspeed;
             }
             kyara1.setX(kyarax);
         } else if (view.getId() == R.id.rightbtn) {
             // 右ボタンを押したらキャラクターが移動する
-            if (kyarax >= (screenx - kyarawidth - 10f)) {
+            if (kyarax >= (screenx - kyarawidth - kyaraspeed)) {
                 kyarax = (screenx - kyarawidth);
             } else {
-                kyarax += 10f;
+                kyarax += kyaraspeed;
             }
             kyara1.setX(kyarax);
         }
