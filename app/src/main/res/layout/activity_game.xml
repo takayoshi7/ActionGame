@@ -39,6 +39,33 @@
                 android:layout_height="80dp"
                 app:srcCompat="@drawable/chap4_1_2"
                 tools:srcCompat="@drawable/chap4_1_1" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="vertical">
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp" />
+
+                <TextView
+                    android:id="@+id/frametext"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="50dp"
+                    android:text="Game Over" />
+
+                <Button
+                    android:id="@+id/framebtn"
+                    android:layout_width="100dp"
+                    android:layout_height="60dp"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:text="Start" />
+            </LinearLayout>
         </FrameLayout>
 
         <LinearLayout
@@ -62,9 +89,5 @@
                 android:layout_weight="1"
                 android:text="→" />
         </LinearLayout>
-
-
     </LinearLayout>
-
-
 </LinearLayout>

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
@@ -18,20 +19,24 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Random;
 
-public class GameActivity extends AppCompatActivity implements View.OnClickListener, Runnable {
+public class GameActivity extends AppCompatActivity implements View.OnClickListener, Runnable, View.OnLongClickListener, View.OnTouchListener {
     // キャラクターと障害物の画像
     private ImageView kyara1;
     private ImageView rect;
     // スコア表示部
     private TextView scoretext;
+    // ゲームオーバー表示部
+    private TextView frametext;
     // キャラクターを左右に動かすボタン
     private Button leftbtn;
     private Button rightbtn;
+    // ゲームオーバー時リスタートボタン
+    private Button framebtn;
     // ゲームエリアのレイアウト
     private FrameLayout frame;
     // キャラクターと障害物の初期位置
     private float rectx;
-    private float recty = -70f;
+    private float recty = -170f;
     private float kyarax;
     private float kyaray;
     // 障害物のサイズ
@@ -51,6 +56,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // Handlerクラスのインスタンス化
     private final Handler handler = new Handler(Looper.getMainLooper());
 
+    private boolean leftphase = false;
+    private boolean rightphase =false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,11 +71,21 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         scoretext = findViewById(R.id.scoretext);
         // ゲームエリアをIDで取得
         frame = findViewById(R.id.frame);
+        // ゲームオーバーエリアをIDで取得
+        frametext = findViewById(R.id.frametext);
+        // 非表示に
+        frametext.setVisibility(View.INVISIBLE);
         // ボタンをIDで取得
+        framebtn = findViewById(R.id.framebtn);
+        framebtn.setOnClickListener(this);
         leftbtn = findViewById(R.id.leftbtn);
         leftbtn.setOnClickListener(this);
+        leftbtn.setOnLongClickListener(this);
+        leftbtn.setOnTouchListener(this);
         rightbtn = findViewById(R.id.rightbtn);
         rightbtn.setOnClickListener(this);
+        rightbtn.setOnLongClickListener(this);
+        rightbtn.setOnTouchListener(this);
 
         ViewTreeObserver obser = kyara1.getViewTreeObserver();
         obser.addOnGlobalLayoutListener(() -> {
@@ -104,11 +122,6 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
         // 初期スコア表示
         scoretext.setText("score:" + score);
-
-        clickphase = false;
-        Thread thread = new Thread(this);
-        // 実行
-        thread.start();
     }
 
     @Override
@@ -126,7 +139,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 public void run() {
                     //実行したい機能
                     recty += 3f; // 時間periodで動く距離
-                    if(recty > screeny) {
+                    if (recty > screeny) {
                         recty = -100f;
 
                         // 障害物の横位置をランダムにする
@@ -137,13 +150,34 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         scoretext.setText("score:" + score);
                     }
 
+                    // 左ボタン長押し時の動作
+                    if (leftphase == true) {
+                        if (kyarax <= 5f) {
+                            kyarax = 0f;
+                        } else {
+                            kyarax -= 5f;
+                        }
+                        kyara1.setX(kyarax);
+                    }
+
+                    // 右ボタン長押し時の動作
+                    if (rightphase == true) {
+                        if (kyarax >= (screenx - kyarawidth - 5f)) {
+                            kyarax = (screenx - kyarawidth);
+                        } else {
+                            kyarax += 5f;
+                        }
+                        kyara1.setX(kyarax);
+                    }
+
                     // 衝突判定
-                    if((recty + rectheight) >= kyaray && recty <= (kyaray + kyaraheight) &&
+                    if ((recty + rectheight) >= kyaray && recty <= (kyaray + kyaraheight) &&
                             (rectx + rectwidth) > kyarax && rectx < (kyarax + kyarawidth)) {
                         // 処理停止
                         clickphase = true;
                         // ゲームオーバー表示
-                        scoretext.setText("GAME OVER");
+                        frametext.setVisibility(View.VISIBLE);
+                        frametext.setText("GAME OVER");
                     }
 
                     // 配置場所をセット
@@ -154,21 +188,53 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    // 左右の移動ボタンを押したらそれぞれキャラクターが移動する
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        int action = event.getAction();
+        if (action == MotionEvent.ACTION_UP) {
+//            clickphase = true;
+            leftphase = false;
+            rightphase = false;
+        }
+        return false;
+    }
+
+    // ボタン長押し
+    @Override
+    public boolean onLongClick(View view) {
+        if (view.getId() == R.id.leftbtn) {
+            clickphase = false;
+            leftphase = true;
+        } else if (view.getId() == R.id.rightbtn) {
+            clickphase = false;
+            rightphase = true;
+        }
+        return true;
+    }
+
+    // ボタン押下
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.leftbtn) {
-            if(kyarax <= 50f) {
+        if (view.getId() == R.id.framebtn) {
+            // スタートボタンを押したらスタート
+            framebtn.setVisibility(View.INVISIBLE);
+            clickphase = false;
+            Thread thread = new Thread(this);
+            thread.start();
+        } else if (view.getId() == R.id.leftbtn) {
+            // 左ボタンを押したらキャラクターが移動する
+            if (kyarax <= 10f) {
                 kyarax = 0f;
             } else {
-                kyarax -= 50f;
+                kyarax -= 10f;
             }
             kyara1.setX(kyarax);
         } else if (view.getId() == R.id.rightbtn) {
-            if(kyarax >= (screenx - kyarawidth - 50f)) {
+            // 右ボタンを押したらキャラクターが移動する
+            if (kyarax >= (screenx - kyarawidth - 10f)) {
                 kyarax = (screenx - kyarawidth);
             } else {
-                kyarax += 50f;
+                kyarax += 10f;
             }
             kyara1.setX(kyarax);
         }
