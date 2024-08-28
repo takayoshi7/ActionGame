@@ -1,5 +1,6 @@
 package com.example.actiongame;
 
+import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,15 +28,17 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // キャラクターと障害物の画像
     private ImageView kyara1;
     private ImageView rect;
+    private ImageView rect2;
+    private ImageView space1;
     // スコア表示部
     private TextView scoretext;
     // ゲームオーバー表示部
     private TextView frametext;
+
+    private TextView speedtext;
     // キャラクターを左右に動かすボタン
     private Button leftbtn;
     private Button rightbtn;
-    // ゲームオーバー時リスタートボタン
-    private Button framebtn;
     // ゲームエリアのレイアウト
     private FrameLayout frame;
     // キャラクターと障害物の初期位置
@@ -50,6 +53,10 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // キャラクターのサイズ
     private float kyarawidth;
     private float kyaraheight;
+    // キャラクターが通れる障害物の隙間のサイズ
+    private float spacewidth;
+    private float spaceheight;
+    private int spacemoverange;
     // ゲームエリアのサイズ
     private float screenx;
     private float screeny;
@@ -65,6 +72,12 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     // ボタンが長押しされたか判定用
     private boolean leftphase = false;
     private boolean rightphase =false;
+    // ステージ判定用
+    private int stagephase = 1;
+    // 内部ストレージ保存用
+    private SharedPreferences actgamepref;
+    private int speedint = 1;
+    private int longint = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,20 +90,38 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             return insets;
         });
 
+        actgamepref = getSharedPreferences("actgamepref", MODE_PRIVATE);
+
+        speedint = actgamepref.getInt("actgamespeed", 1);
+        longint = actgamepref.getInt("actgamelong", 1);
+        stagephase = actgamepref.getInt("actgamestage", 1);
+
+        if (speedint <= 10 && speedint >= 1) {
+            kyaraspeed = (speedint) * 10f;
+        }
+
+        if (longint <= 10 && longint >= 1) {
+            kyaraspeedlong = (longint) * 1f;
+        }
+
         // 画像をIDで取得
         kyara1 = findViewById(R.id.kyara1);
         rect = findViewById(R.id.rect);
+        rect2 = findViewById(R.id.rect2);
+        space1 = findViewById(R.id.space1);
         // スコアテキストエリアをIDで取得
         scoretext = findViewById(R.id.scoretext);
         // ゲームエリアをIDで取得
         frame = findViewById(R.id.frame);
+        // ボタン以外のテキストやレイアウトなどにクリック機能を付けるときに必要
+        frame.setClickable(true);
+        // クリック機能
+        frame.setOnClickListener(this);
         // ゲームオーバーエリアをIDで取得
         frametext = findViewById(R.id.frametext);
-        // 非表示に
-        frametext.setVisibility(View.INVISIBLE);
+        // スピードレベル表示エリアをIDで取得
+        speedtext = findViewById(R.id.speedtext);
         // ボタンをIDで取得
-        framebtn = findViewById(R.id.framebtn);
-        framebtn.setOnClickListener(this);
         leftbtn = findViewById(R.id.leftbtn);
         leftbtn.setOnClickListener(this);
         leftbtn.setOnLongClickListener(this);
@@ -99,6 +130,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         rightbtn.setOnClickListener(this);
         rightbtn.setOnLongClickListener(this);
         rightbtn.setOnTouchListener(this);
+
+        // スピードレベルの表示テキストセット
+        speedtext.setText("SpeedLv:" + speedint + " LongLv:" + longint);
 
         ViewTreeObserver obser = kyara1.getViewTreeObserver();
         obser.addOnGlobalLayoutListener(() -> {
@@ -115,26 +149,69 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             kyara1.setY(kyaray);
         });
 
-        ViewTreeObserver obser2 = rect.getViewTreeObserver();
-        obser2.addOnGlobalLayoutListener(() -> {
-            // 障害物のサイズ取得
-            rectwidth = rect.getWidth();
-            rectheight = rect.getHeight();
-            // ゲームエリアのサイズ取得
-            screenx = frame.getWidth();
-            screeny = frame.getHeight();
-            // 障害物の初期配置（ランダム）
-            rectmoverange = (int)screenx + 1 - (int)rectwidth;
-            int firstX = new Random().nextInt(rectmoverange) ;
-            rectx = (float)firstX;
-            rect.setX(rectx);
-            rect.setY(recty);
-        });
+        // ステージ1なら処理
+        if (stagephase == 1) {
+            // ステージ1用障害物表示
+            rect.setVisibility(View.VISIBLE);
+
+            ViewTreeObserver obser2 = rect.getViewTreeObserver();
+            obser2.addOnGlobalLayoutListener(() -> {
+                // 障害物のサイズ取得
+                rectwidth = rect.getWidth();
+                rectheight = rect.getHeight();
+                // ゲームエリアのサイズ取得
+                screenx = frame.getWidth();
+                screeny = frame.getHeight();
+                // 障害物が画面からはみ出ないように範囲取得
+                rectmoverange = (int)screenx + 1 - (int)rectwidth;
+                // ランダム配置取得
+                int randomX = new Random().nextInt(rectmoverange);
+                rectx = (float)randomX;
+                // 配置設定
+                rect.setX(rectx);
+                rect.setY(recty);
+            });
+
+            // ステージ2用障害物と隙間を非表示
+            rect2.setVisibility(View.INVISIBLE);
+            space1.setVisibility(View.INVISIBLE);
+        } else if (stagephase == 2) {
+            // ステージ2用障害物と隙間を表示
+            rect2.setVisibility(View.VISIBLE);
+            space1.setVisibility(View.VISIBLE);
+
+            ViewTreeObserver obser3 = space1.getViewTreeObserver();
+            obser3.addOnGlobalLayoutListener(() -> {
+                // 隙間のサイズ取得
+                spacewidth = space1.getWidth();
+                spaceheight = space1.getHeight();
+                // 障害物のサイズ取得
+                rectheight = space1.getHeight();
+                // ゲームエリアのサイズ取得
+                screenx = frame.getWidth();
+                screeny = frame.getHeight();
+                // 隙間が画面からはみ出ないように範囲取得
+                spacemoverange = (int)screenx + 1 - (int)spacewidth;
+                // ランダム配置取得
+                int randomX = new Random().nextInt(spacemoverange);
+                rectx = (float)randomX;
+
+                // 配置設定
+                space1.setX(rectx);
+                space1.setY(recty);
+                rect2.setX(0f);
+                rect2.setY(recty);
+            });
+
+            // ステージ1用障害物を非表示
+            rect.setVisibility(View.INVISIBLE);
+        }
 
         // 初期スコア表示
         scoretext.setText("score:" + score);
     }
 
+    // 処理
     @Override
     public void run() {
         int period = 10; // 1000ミリ秒 = 1秒
@@ -155,14 +232,19 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
                         // 障害物の横位置をランダムにする
                         Random random = new Random();
-                        int x = random.nextInt(rectmoverange);
-                        rectx = x;
+                        if (stagephase == 1) {
+                            rectx = random.nextInt(rectmoverange);
+                        } else if (stagephase == 2) {
+                            rectx = random.nextInt(spacemoverange);
+                        }
+
+                        // スコアを1追加して表示
                         score++;
                         scoretext.setText("score:" + score);
                     }
 
                     // 左ボタン長押し時の動作
-                    if (leftphase == true) {
+                    if (leftphase) {
                         if (kyarax <= kyaraspeedlong) {
                             kyarax = 0f;
                         } else {
@@ -172,7 +254,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     // 右ボタン長押し時の動作
-                    if (rightphase == true) {
+                    if (rightphase) {
                         if (kyarax >= (screenx - kyarawidth - kyaraspeedlong)) {
                             kyarax = (screenx - kyarawidth);
                         } else {
@@ -182,23 +264,51 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     // 衝突判定
-                    if ((recty + rectheight) >= kyaray && recty <= (kyaray + kyaraheight) &&
-                            (rectx + rectwidth) > kyarax && rectx < (kyarax + kyarawidth)) {
-                        // 処理停止
-                        clickphase = true;
-                        // ゲームオーバー表示
-                        frametext.setVisibility(View.VISIBLE);
-                        frametext.setText("GAME OVER");
+                    if (stagephase == 1) {
+                        stage1check();
+                    } else if (stagephase == 2) {
+                        stage2check();
                     }
-
-                    // 配置場所をセット
-                    rect.setX(rectx);
-                    rect.setY(recty);
                 }
             });
         }
     }
 
+    // stage1の衝突判定
+    private void stage1check() {
+        if ((recty + rectheight) >= kyaray && recty <= (kyaray + kyaraheight) &&
+                (rectx + rectwidth) > kyarax && rectx < (kyarax + kyarawidth)) {
+            // 処理停止
+            clickphase = true;
+            // ゲームオーバー表示
+            frametext.setVisibility(View.VISIBLE);
+            frametext.setText("GAME OVER");
+        }
+
+        // 配置場所をセット
+        rect.setX(rectx);
+        rect.setY(recty);
+    }
+
+    // stage2の衝突判定
+    private void stage2check() {
+        if ((recty + rectheight) >= kyaray && recty <= (kyaray + kyaraheight) &&
+                !(kyarax >= rectx && kyarax <= (rectx + spacewidth) && (rectx + spacewidth) >= rectx &&
+                        (kyarax + kyarawidth) <= (rectx + spacewidth))) {
+            // 処理停止
+            clickphase = true;
+            // ゲームオーバー表示
+            frametext.setVisibility(View.VISIBLE);
+            frametext.setText("GAME OVER");
+        }
+
+        space1.setX(rectx);
+        space1.setY(recty);
+        rect2.setX(0f);
+        rect2.setY(recty);
+    }
+
+    // タッチイベント
     @Override
     public boolean onTouch(View view, MotionEvent event) {
         int action = event.getAction();
@@ -210,7 +320,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    // ボタン長押し
+    // 長押しイベント
     @Override
     public boolean onLongClick(View view) {
         if (view.getId() == R.id.leftbtn) {
@@ -223,12 +333,11 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
-    // ボタン押下
+    // クリックイベント
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.framebtn) {
-            // スタートボタンを押したらスタート
-            framebtn.setVisibility(View.INVISIBLE);
+        if (view.getId() == R.id.frame) {
+            frametext.setVisibility(View.INVISIBLE);
             clickphase = false;
             Thread thread = new Thread(this);
             thread.start();

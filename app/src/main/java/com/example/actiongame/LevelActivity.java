@@ -24,6 +24,8 @@ public class LevelActivity extends AppCompatActivity  implements View.OnClickLis
     private EditText speededit;
     // ロングスピードレベル
     private EditText longedit;
+    // ステージ選択
+    private EditText stageedit;
     // 内部ストレージ保存用
     private SharedPreferences actgamepref;
 
@@ -43,11 +45,14 @@ public class LevelActivity extends AppCompatActivity  implements View.OnClickLis
         // 値を取得（第1引数：キー、第2引数：キーが存在しない場合のデフォルト値）
         int speedint = actgamepref.getInt("actgamespeed", 1);
         int longint = actgamepref.getInt("actgamelong", 1);
+        int stageint = actgamepref.getInt("actgamestage", 1);
 
         // スピードレベル設定値をIDで取得
         speededit = findViewById(R.id.levelspeedit);
         // ロングスピードレベル設定値をIDで取得
         longedit = findViewById(R.id.levellongedit);
+        // ステージ設定値をIDで取得
+        stageedit = findViewById(R.id.levelstageedit);
         // ボタンをIDで取得
         levelback = findViewById(R.id.levelback);
         levelback.setOnClickListener(this);
@@ -56,6 +61,7 @@ public class LevelActivity extends AppCompatActivity  implements View.OnClickLis
         // スピードレベルのテキストをセット
         speededit.setText("" + speedint);
         longedit.setText("" + longint);
+        stageedit.setText("" + stageint);
     }
 
     @Override
@@ -74,13 +80,17 @@ public class LevelActivity extends AppCompatActivity  implements View.OnClickLis
             if (!speededit.getText().toString().equals("")) {
                 // ロングスピードレベルのnullチェック
                 if (!longedit.getText().toString().equals("")) {
-                    // edit()でEditorオブジェクトを作成
-                    SharedPreferences.Editor actedit = actgamepref.edit();
-                    // 数値として設定（第1引数：key、第2引数：Value）文字列を保存するならputStringを使う
-                    actedit.putInt("actgamespeed", Integer.parseInt(speededit.getText().toString()));
-                    actedit.putInt("actgamelong", Integer.parseInt(longedit.getText().toString()));
-                    // 設定を保存
-                    actedit.apply();
+                    // ステージ選択のnullチェック
+                    if (!stageedit.getText().toString().equals("")) {
+                        // edit()でEditorオブジェクトを作成
+                        SharedPreferences.Editor actedit = actgamepref.edit();
+                        // 数値として設定（第1引数：key、第2引数：Value）文字列を保存するならputStringを使う
+                        actedit.putInt("actgamespeed", Integer.parseInt(speededit.getText().toString()));
+                        actedit.putInt("actgamelong", Integer.parseInt(longedit.getText().toString()));
+                        actedit.putInt("actgamestage", Integer.parseInt(stageedit.getText().toString()));
+                        // 設定を保存
+                        actedit.apply();
+                    }
                 }
             }
         }

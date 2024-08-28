@@ -14,9 +14,13 @@
         android:layout_height="40dp"
         android:orientation="horizontal">
 
+        <Space
+            android:layout_width="5dp"
+            android:layout_height="wrap_content" />
+
         <TextView
             android:id="@+id/scoretext"
-            android:layout_width="150dp"
+            android:layout_width="120dp"
             android:layout_height="40dp"
             android:textSize="25dp"
             android:text="Score:0" />
@@ -30,7 +34,7 @@
             android:id="@+id/speedtext"
             android:layout_width="230dp"
             android:layout_height="40dp"
-            android:textSize="25dp"
+            android:textSize="20dp"
             android:gravity="right"
             android:text="SpeedLv:1 LongLv:1" />
 
@@ -54,15 +58,27 @@
                 android:id="@+id/rect"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                app:srcCompat="@drawable/chap4_1_1"
-                tools:srcCompat="@drawable/chap4_1_2" />
+                app:srcCompat="@drawable/chap4_1_2" />
+
+            <ImageView
+                android:id="@+id/rect2"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/chap4_1_2" />
+
+            <ImageView
+                android:id="@+id/space1"
+                android:layout_width="100dp"
+                android:layout_height="60dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/chap4_1_3" />
 
             <ImageView
                 android:id="@+id/kyara1"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                app:srcCompat="@drawable/chap4_1_2"
-                tools:srcCompat="@drawable/chap4_1_1" />
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                app:srcCompat="@drawable/chap4_1_1" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -80,15 +96,8 @@
                     android:layout_height="100dp"
                     android:gravity="center"
                     android:textSize="50dp"
-                    android:text="Game Over" />
+                    android:text="Tap Start" />
 
-                <Button
-                    android:id="@+id/framebtn"
-                    android:layout_width="100dp"
-                    android:layout_height="60dp"
-                    android:gravity="center"
-                    android:layout_gravity="center"
-                    android:text="Start" />
             </LinearLayout>
         </FrameLayout>
 
